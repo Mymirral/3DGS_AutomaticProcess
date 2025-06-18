@@ -30,6 +30,13 @@ namespace _3DGS_Process
         private string modelPath = "选择模型生成位置";
 
         [ObservableProperty]
+        [NotifyPropertyChangedFor(nameof(StepInfo))]
+        private int step;      //每隔多少帧保存一张图片
+
+        public string StepInfo => $"每 " + Step + " 帧分割";  //初始化步长信息
+
+        //是否能切割，取决与视频和保存位置是否选好了
+        [ObservableProperty]
         [NotifyCanExecuteChangedFor(nameof(ClipCommand))]
         private bool isClipEnable = false;
         bool CanClip() => IsClipEnable = videoSet && folderSet;   //确认是否都选择好了
@@ -100,9 +107,10 @@ namespace _3DGS_Process
         {
             string folderpath = FolderPath;
             string videopath = VideoPath;
+
+            //异步调用一下
             await Task.Run(() =>
             {
-                //异步调用一下
                 using (var cap = new VideoCapture(videopath))
                 {
                     if (!cap.IsOpened())
@@ -119,10 +127,16 @@ namespace _3DGS_Process
                     }
 
                     int i = 0;  //帧索引
+                    int step = 30; 
+
                     Mat frame = new Mat();   //新建画布
                     while (cap.Read(frame))   //读取每一帧
                     {
-                        Cv2.ImWrite(newfolder + $"\\frame_{i++}.png", frame); //\\{newfolder}
+                        if(i%step == 0)
+                        {
+                            Cv2.ImWrite(newfolder + $"\\frame_{i}.png", frame); //\\{newfolder}
+                        }
+                        i++;
                     }
                     Progress = "分割完成";
                 }
@@ -162,18 +176,24 @@ namespace _3DGS_Process
                 string plyExportSetting = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "plyExportSetting.xml");    //点云位置保存设置
 
                 string savefolder;   //保存的文件夹
-                if (videoSet) savefolder = $"{Path.Combine(folderpath, videopath)}_Clip";
-                else savefolder = folderpath;
-
-
-
+                string savename;   //保存文件名
+                if (videoSet)
+                {
+                    savefolder = $"{Path.Combine(folderpath, videopath)}_Clip";   //如果是直接从视频切割的图片，从切割完的文件夹中读取图片
+                    savename = videopath;
+                }
+                else
+                {
+                    savefolder = folderpath+"\\Save";   //已有图片，所选文件夹就是
+                }
                 string command =
                     "-headless " +  //不显示界面
                     $"-addFolder \"{savefolder}\" " +
                     "-align " +
+                    $"-exportLatestComponents \"{savefolder}\\test.rsalign\" " +
                     $"-exportRegistration \"{savefolder}\\test.csv\" {registrationExportSetting} " +
                     $"-exportSparsePointCloud \"{savefolder}\\test.ply\" {plyExportSetting} " +
-                    $"-quit";
+                    $"-quit ";
 
                 var psi = new ProcessStartInfo
                 {
@@ -193,12 +213,20 @@ namespace _3DGS_Process
             });
         }
 
+        /// <summary>
+        /// 选择模型保存位置
+        /// </summary>
         [RelayCommand]
         void OpenSaveFolder()
         {
             Process.Start("explorer.exe", $"{FolderPath}");
         }
 
+
+        /// <summary>
+        /// 训练高斯模型
+        /// </summary>
+        /// <returns></returns>
         [RelayCommand(CanExecute = nameof(CanTrain))]
         async Task Train3DGS()
         {
@@ -224,12 +252,13 @@ namespace _3DGS_Process
             await Task.Run(() =>
             {
                 //处理各种文件夹路径
-                string exePath = @"C:\Program Files\Jawset Postshot\bin\postshot-cli.exe";   //RC的文件路径
+                string exePath = @"C:\Program Files\Jawset Postshot\bin\postshot-cli.exe";   
 
                 string command =
                     "train " +
                     $"-i \"{picturefolder}\" \"{picturefolder}\" " +
-                    $"-o \"{savefolder}.psht\" ";
+                    $"-o \"{savefolder}\\test.psht\" " +
+                    $"--export-splat-ply \"{savefolder}\\test.ply\" ";
 
                 var psi = new ProcessStartInfo
                 {

@@ -10,11 +10,11 @@
         Title="3DGS模型流程自动程序" Height="500" Width="400"
         WindowStartupLocation="CenterScreen"
         ResizeMode="CanMinimize">
-    <Grid ShowGridLines="True">
+    <Grid>
         <Grid.RowDefinitions>
             <RowDefinition Height="1.5*"/>
             <RowDefinition Height="1*"/>
-            <RowDefinition Height="2*"/>
+            <RowDefinition Height="1.5*"/>
             <RowDefinition Height="1.5*"/>
             <RowDefinition Height="1*"/>
         </Grid.RowDefinitions>
@@ -30,8 +30,26 @@
             <Button Grid.Row="1" Style="{StaticResource ButtonDashed}" Content="{Binding FolderPath}" Width="334" Height="28" VerticalAlignment="center" Command="{Binding OpenFolderCommand}"/>
         </Grid>
 
-        <Button Grid.Row="1" Style="{StaticResource ButtonDashedPrimary}" Content="分割" Width="334" Height="28" Command="{Binding ClipCommand}"/>
+        
+        <Grid Grid.Row="1">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
 
+            <Grid Grid.Row="0">
+                <Grid.ColumnDefinitions>
+                    <ColumnDefinition Width="1*"/>
+                    <ColumnDefinition Width="3.8*"/>
+                </Grid.ColumnDefinitions>
+
+                <Label Style="{StaticResource BaseStyle}"  Content="分割间隔" VerticalAlignment="Center" HorizontalAlignment="Right"/>
+                <Slider  Value="{Binding Step}" Maximum="300" Minimum="0" Grid.Column="1" Width="280" VerticalAlignment="Center" HorizontalAlignment="Left" Margin="10,0"/>
+            </Grid>
+            <Button Grid.Row="1" Style="{StaticResource ButtonDashedPrimary}" Command="{Binding ClipCommand}" Content="{Binding StepInfo}" Width="334" Height="28" />
+        </Grid>
+        
+        
         <Grid Grid.Row="2">
             <Grid.RowDefinitions>
                 <RowDefinition Height="1.5*"/>
@@ -54,7 +72,7 @@
             <Button Grid.Row="1" Style="{StaticResource ButtonDashedSuccess}" Command="{Binding Train3DGSCommand}" IsEnabled="{Binding IsModelTrainEnable}" Content="3DGS训练" Width="334" Height="28" VerticalAlignment="Center"/>
 
         </Grid>
-        
+
         <Label Content="{Binding Progress}" Style="{Binding NotifyTextStyle}" Grid.Row="4" Width="334"/>
     </Grid>
 </Window>
