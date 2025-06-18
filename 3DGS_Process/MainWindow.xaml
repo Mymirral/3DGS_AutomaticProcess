@@ -1,0 +1,60 @@
+﻿<Window
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:_3DGS_Process"
+        xmlns:hc="https://handyorg.github.io/handycontrol" x:Class="_3DGS_Process.MainWindow"
+        d:DataContext="{d:DesignInstance local:MainWindowVM}"
+        mc:Ignorable="d"
+        Title="3DGS模型流程自动程序" Height="500" Width="400"
+        WindowStartupLocation="CenterScreen"
+        ResizeMode="CanMinimize">
+    <Grid ShowGridLines="True">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="1.5*"/>
+            <RowDefinition Height="1*"/>
+            <RowDefinition Height="2*"/>
+            <RowDefinition Height="1.5*"/>
+            <RowDefinition Height="1*"/>
+        </Grid.RowDefinitions>
+
+
+        <Grid Grid.Row="0">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+
+            <Button Grid.Row="0" Style="{StaticResource ButtonDashed}" Content="{Binding VideoPath}" hc:BorderElement.Circular="False" Width="334" Height="28" Command="{Binding OpenVideoCommand}"  VerticalAlignment="center"/>
+            <Button Grid.Row="1" Style="{StaticResource ButtonDashed}" Content="{Binding FolderPath}" Width="334" Height="28" VerticalAlignment="center" Command="{Binding OpenFolderCommand}"/>
+        </Grid>
+
+        <Button Grid.Row="1" Style="{StaticResource ButtonDashedPrimary}" Content="分割" Width="334" Height="28" Command="{Binding ClipCommand}"/>
+
+        <Grid Grid.Row="2">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1.5*"/>
+                <RowDefinition Height="2*"/>
+                <RowDefinition Height="2*"/>
+            </Grid.RowDefinitions>
+
+            <CheckBox Grid.Row="0" Content="照片已分割" HorizontalAlignment="Center" VerticalAlignment="Center" IsChecked="{Binding IsPictureExsist}"/>
+            <Button Grid.Row="1" Style="{StaticResource ButtonDashedWarning}" Command="{Binding AlignPictureAndSaveCommand}" Content="对齐图片并保存" Width="334" Height="28" VerticalAlignment="Center" IsEnabled="{Binding IsPictureExsist}"/>
+            <Button Grid.Row="2" Style="{StaticResource ButtonDashedWarning}" Command="{Binding OpenSaveFolderCommand}" Content="打开文件保存位置" Width="334" Height="28" VerticalAlignment="Center"/>
+        </Grid>
+
+        <Grid Grid.Row="3">
+            <Grid.RowDefinitions>
+                <RowDefinition Height="1*"/>
+                <RowDefinition Height="1*"/>
+            </Grid.RowDefinitions>
+
+            <Button Grid.Row="0" Style="{StaticResource ButtonDashed}" Content="{Binding ModelPath}" Width="334" Height="28" VerticalAlignment="center" Command="{Binding Open3DGSFolderCommand}"/>
+            <Button Grid.Row="1" Style="{StaticResource ButtonDashedSuccess}" Command="{Binding Train3DGSCommand}" IsEnabled="{Binding IsModelTrainEnable}" Content="3DGS训练" Width="334" Height="28" VerticalAlignment="Center"/>
+
+        </Grid>
+        
+        <Label Content="{Binding Progress}" Style="{Binding NotifyTextStyle}" Grid.Row="4" Width="334"/>
+    </Grid>
+</Window>
