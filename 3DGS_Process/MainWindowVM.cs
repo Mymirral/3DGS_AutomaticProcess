@@ -35,7 +35,7 @@ namespace _3DGS_Process
         bool CanClip() => IsClipEnable = videoSet && folderSet;   //确认是否都选择好了
 
         [ObservableProperty]
-        [NotifyCanExecuteChangedFor(nameof(AlignPictureAndSaveCommand))]   
+        [NotifyCanExecuteChangedFor(nameof(AlignPictureAndSaveCommand))]
         private bool isPictureExsist = false;
         bool CanAlign() => IsPictureExsist;                         //是否能输出相机对齐csv
 
@@ -112,14 +112,17 @@ namespace _3DGS_Process
                     }
 
                     Progress = "正在切割视频...";
-
-                    string newfolder = $"{Path.GetFileNameWithoutExtension(videopath)}_Data";
+                    string newfolder = Path.Combine(folderpath, Path.GetFileNameWithoutExtension(videopath) + "_Clip");
+                    if (!Directory.Exists(newfolder))
+                    {
+                        Directory.CreateDirectory(newfolder); //创建新文件夹
+                    }
 
                     int i = 0;  //帧索引
                     Mat frame = new Mat();   //新建画布
                     while (cap.Read(frame))   //读取每一帧
                     {
-                        Cv2.ImWrite(folderpath + $"\\frame_{i++}.png", frame); //\\{newfolder}
+                        Cv2.ImWrite(newfolder + $"\\frame_{i++}.png", frame); //\\{newfolder}
                     }
                     Progress = "分割完成";
                 }
@@ -147,7 +150,7 @@ namespace _3DGS_Process
                 return;
             }
             string folderpath = FolderPath;
-            string videopath = VideoPath;
+            string videopath = Path.GetFileNameWithoutExtension(VideoPath);
 
             Progress = "正在对齐相机位置中...";
 
@@ -159,15 +162,15 @@ namespace _3DGS_Process
                 string plyExportSetting = Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "plyExportSetting.xml");    //点云位置保存设置
 
                 string savefolder;   //保存的文件夹
-                if (videoSet) savefolder = $"{folderpath}\\{Path.GetFileNameWithoutExtension(videopath)}_Data";
+                if (videoSet) savefolder = $"{Path.Combine(folderpath, videopath)}_Clip";
                 else savefolder = folderpath;
 
 
 
-                string command =   
+                string command =
                     "-headless " +  //不显示界面
                     $"-addFolder \"{savefolder}\" " +
-                    "-align" +
+                    "-align " +
                     $"-exportRegistration \"{savefolder}\\test.csv\" {registrationExportSetting} " +
                     $"-exportSparsePointCloud \"{savefolder}\\test.ply\" {plyExportSetting} " +
                     $"-quit";
@@ -199,6 +202,21 @@ namespace _3DGS_Process
         [RelayCommand(CanExecute = nameof(CanTrain))]
         async Task Train3DGS()
         {
+            if (!folderSet)
+            {
+                await Task.Run(() =>
+                {
+                    NotifyTextStyle = (Style)Application.Current.Resources["LabelDanger"];
+                    Progress = "请选择图片文件夹后继续！";
+                });
+
+                await Task.Delay(2000);
+                NotifyTextStyle = (Style)Application.Current.Resources["LabelDefault"];
+                Progress = "等待任务执行";
+                return;
+            }
+
+            string picturefolder = FolderPath;
             string savefolder = ModelPath;
 
             Progress = "正在进行三维高斯溅射...";
@@ -206,11 +224,12 @@ namespace _3DGS_Process
             await Task.Run(() =>
             {
                 //处理各种文件夹路径
-                string exePath = @"D:\APP\Jawset Postshot\bin\postshot-cli.exe";   //RC的文件路径
+                string exePath = @"C:\Program Files\Jawset Postshot\bin\postshot-cli.exe";   //RC的文件路径
 
                 string command =
-                    "--help " +
-                    "";
+                    "train " +
+                    $"-i \"{picturefolder}\" \"{picturefolder}\" " +
+                    $"-o \"{savefolder}.psht\" ";
 
                 var psi = new ProcessStartInfo
                 {
